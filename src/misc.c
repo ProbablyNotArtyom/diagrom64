@@ -19,3 +19,10 @@ void __fastcall__ delay(void) {
 		}
 	}
 }
+
+void __fastcall__ microdelay(void) {
+	static unsigned char x;
+	for (x = 0; x < 0x20; ++x) {
+		asm("nop");
+	}
+}

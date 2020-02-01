@@ -7,7 +7,7 @@
 .include	"system.inc"
 .include 	"zeropage.inc"
 
-.export 	RESET_VEC
+.export 	RESET_VEC, _MEMPAT
 .export		_get_screencode, _test_zeropage, _test_stack
 .import		_stage_0
 
@@ -27,6 +27,7 @@
 
 ;;----------------- tables -------------------
 
+_MEMPAT:
 MEMPAT:
 	.byte $00, $55, $AA, $00, $01, $02, $04, $08
 	.byte $10, $20, $40, $80, $FE, $FD, $FB, $F7
@@ -68,6 +69,7 @@ FAIL:	scrstrz "fail"
 ;;--------------------------------------------
 
 .segment "STARTUP"
+_RESET_VEC:
 RESET_VEC:
 	ldx	#$FF			; Do all the usual CPU init stuff
 	sei					; If the CPU can't complete this before haulting then it's likely physical damage to the system

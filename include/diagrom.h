@@ -9,7 +9,8 @@
 #define SCREENMEM	0x800
 
 
-void delay(void);
+void __fastcall__ delay(void);
+void __fastcall__ microdelay(void);
 void puts_addr(const char str[], const char x, const char y);
 char get_screencode(const char c);
 char test_zeropage();
