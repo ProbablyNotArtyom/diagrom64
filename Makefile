@@ -15,7 +15,7 @@ FILNAME := diagrom
 CC      = cc65
 AS		= ca65
 LD		= ld65
-CFLAGS  = -t c64 --cpu 6502 -I $(INCDIR) -DSKIP_BOOT --debug-info -g
+CFLAGS  = -t c64 --cpu 6502 -I $(INCDIR) --debug-info -g
 LDFLAGS = -Ln $(BINDIR)/$(FILNAME).vice --dbgfile $(BINDIR)/$(FILNAME).dbg -m $(BINDIR)/$(FILNAME).map -C $(BASEDIR)/link.ld
 
 ########################################
