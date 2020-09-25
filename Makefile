@@ -5,10 +5,10 @@ BINDIR := $(BASEDIR)/bin
 SRCDIR := $(BASEDIR)/src
 INCDIR := $(BASEDIR)/include
 
-SOURCES_ASM := $(shell find ./src -name '*.s')
-OBJECTS_ASM := $(foreach tmp, $(SOURCES_ASM:%.s=%.o), $(OBJDIR)/$(notdir $(tmp)))
-SOURCES := $(shell find ./src -name '*.c')
-OBJECTS := $(foreach tmp, $(SOURCES:%.c=%.o), $(OBJDIR)/$(notdir $(tmp)))
+SOURCES_ASM := $(shell find $(SRCDIR) -name '*.s')
+OBJECTS_ASM := $(patsubst $(SRCDIR)/%.s, $(OBJDIR)/%.o, $(SOURCES_ASM))
+SOURCES := $(shell find $(SRCDIR) -name '*.c')
+OBJECTS := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SOURCES))
 
 FILNAME := diagrom
 
@@ -24,21 +24,23 @@ LDFLAGS = -Ln $(BINDIR)/$(FILNAME).vice --dbgfile $(BINDIR)/$(FILNAME).dbg -m $(
 all: $(FILNAME)
 
 clean:
-	rm -f $(OBJDIR)/*
-	rm -f $(BINDIR)/*
+	rm -rf $(OBJDIR)/*
+	rm -rf $(BINDIR)/*
 	rm -f $(FILNAME)
 
-sim: clean $(FILNAME)
-	x64 -cartultimax $(BINDIR)/$(FILNAME)
+sim: $(FILNAME)
+	x64sc -cartultimax $(BINDIR)/$(FILNAME)
 
 .SECONDEXPANSION:
 $(OBJECTS): $$(patsubst $$(OBJDIR)%.o, $$(SRCDIR)%.c, $$@)
 	@echo "[CC] -c $(shell realpath -m --relative-to=$(PWD) $(patsubst $(OBJDIR)%, $(SRCDIR)%, $(@:%.o=%.c))) -o $(shell realpath -m --relative-to=$(PWD) $(@:%.o=%.s))"
+	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -O -Os $(patsubst $(OBJDIR)%, $(SRCDIR)%, $(@:%.o=%.c)) -o $(@:%.o=%.s)
 	@$(AS) -U $(CFLAGS) $(@:%.o=%.s) -o $(shell realpath -m --relative-to=$(PWD) $(@))
 
 $(OBJECTS_ASM): $$(patsubst $$(OBJDIR)%.o, $$(SRCDIR)%.s, $$@)
 	@echo "[AS] $(shell realpath -m --relative-to=$(PWD) $(patsubst $(OBJDIR)%, $(SRCDIR)%, $(@:%.o=%.s))) -o $(shell realpath -m --relative-to=$(PWD) $(@))"
+	@mkdir -p $(dir $@)
 	@$(AS) -U $(CFLAGS) $(patsubst $(OBJDIR)%, $(SRCDIR)%, $(@:%.o=%.s)) -o $(shell realpath -m --relative-to=$(PWD) $(@))
 
 $(FILNAME): $(OBJECTS) $(OBJECTS_ASM)

@@ -17,9 +17,23 @@ COLOR_LIGHTGREEN        = $0D
 COLOR_LIGHTBLUE         = $0E
 COLOR_GRAY3             = $0F
 
+;;----------------- macros -------------------
+
 .macpack cbm
 
 .macro scrstrz str
 	scrcode str
 	.byte $00
+.endmacro
+
+.macro s_puts str, addr
+.scope
+		ldx #$00
+:		lda str,x
+		beq :+
+		sta addr,x
+		inx
+		jmp :-
+:
+.endscope
 .endmacro
