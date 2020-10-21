@@ -1,11 +1,12 @@
 ;; Diagnostic ROM for the Commodore 64
 ;; NotArtyom 05/08/19
 ;;--------------------------------------------
-;; Performs the dead test 
+;; Performs the dead test
 
 	.include	"c64.inc"
 	.include	"system.inc"
 	.include 	"zeropage.inc"
+	.include 	"config.inc"
 
 	.export 	MEMTEST, _MEMPAT
 	.export		_get_screencode, _test_zeropage, _test_stack
