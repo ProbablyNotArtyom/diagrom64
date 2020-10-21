@@ -1,4 +1,4 @@
-# C64-Diagrom
+# Diagrom64
 
 This project is an open-source C64 diagnostic ROM meant to aid repair of Commodore 64 computers.
 It is designed to replace the kernal ROM on the c64 mainboard, but also functions as a typical deadtest cartridge using ultimax mode
@@ -11,7 +11,7 @@ I plan to eventually add all the tests performed by the deadtest cart, plus many
 ## Building
 
 The CC65 compiler suite is required to build this project. To do so, just type `make all` in the project root.
-To test the ROM, us `make sim` to open diagrom in VICE. If it doesn't find the vice binary correctly, just launch vice with `x64 -kernal bin/diagrom` instead.
+To test the ROM, us `make sim` to open diagrom64 in VICE. If it doesn't find the vice binary correctly, just launch vice with `x64 -kernal bin/diagrom.bin` instead.
 
 ## Authors
 
