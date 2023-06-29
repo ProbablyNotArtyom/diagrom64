@@ -12,114 +12,102 @@
 	#include "diagrom.h"
 	#include "system.h"
 
+//--------------------------------------------
+	
 #define	MEMPAT_COLOR_LEN	12
-const char MEMPAT_COLOR[MEMPAT_COLOR_LEN] = { 0x07, 0x0B, 0x0D, 0x0E, 0x08, 0x04, 0x02, 0x01, 0x0F, 0x0A, 0x05, 0x00 };
+const unsigned char MEMPAT_COLOR[MEMPAT_COLOR_LEN] = { 0x07, 0x0B, 0x0D, 0x0E, 0x08, 0x04, 0x02, 0x01, 0x0F, 0x0A, 0x05, 0x00 };
 
 #define	MEMPAT_LEN	0x12
-extern const char MEMPAT[];
+extern const unsigned char MEMPAT[];
 
+//--------------------------------------------
 
 char test_screen(void);
 char test_color(void);
-void puts_addr(const char str[], const char x, const char y);
 void mem_fail(void);
 
 //--------------------------------------------
 
-static char *global_fault_addr;
+static unsigned char *global_fault_addr;
 
 void main(void) {
 	global_fault_addr = 0;
 
-	puts_addr("zeropage:", 1, 4);
+	puts_xy("zeropage:", 1, 4);
 	if (test_zeropage())
-		puts_addr("pass", 11, 4);
+		puts_xy("pass", 11, 4);
 	else {
-		puts_addr("fail", 8, 7);
+		puts_xy("fail", 11, 4);
 		mem_fail();
 	}
 
-	puts_addr("stack:", 1, 5);
+	puts_xy("stack:", 1, 5);
 	if (test_stack())
-		puts_addr("pass", 8, 5);
+		puts_xy("pass", 8, 5);
 	else {
-		puts_addr("fail", 8, 7);
+		puts_xy("fail", 8, 5);
 		mem_fail();
 	}
 
-	puts_addr("screen:", 1, 6);
+	puts_xy("screen:", 1, 6);
 	if (test_screen())
-		puts_addr("pass", 9, 6);
+		puts_xy("pass", 9, 6);
 	else {
-		puts_addr("fail", 8, 7);
+		puts_xy("fail", 9, 6);
 		mem_fail();
 	}
 
-	puts_addr("color:", 1, 7);
+	puts_xy("color:", 1, 7);
 	if (test_color())
-		puts_addr("pass", 8, 7);
+		puts_xy("pass", 8, 7);
 	else {
-		puts_addr("fail", 8, 7);
+		puts_xy("fail", 8, 7);
 		mem_fail();
 	}
 	return;
 }
 
 char test_screen() {
-	char *screen_data = (char *)SCREENMEM;
-	char *mem_pattern = (char *)MEMPAT;
-	char save, y;
-	int x = 0;
-	while (x < 25*40) {
-		save = screen_data[x];
-		y = 0;
-		while (y < MEMPAT_LEN) {
-			screen_data[x] = mem_pattern[y];
-			microdelay();
-			if (mem_pattern[y] != screen_data[x]) {
-				global_fault_addr = (char *)(SCREENMEM + x);
+	unsigned char save, mempat_index;
+	unsigned char *i = SCREENMEM;
+	while (i < SCREENMEM+25*40) {
+		save = *i;
+		mempat_index = 0;
+		while (mempat_index < MEMPAT_LEN) {
+			*i = MEMPAT[mempat_index];
+			if (MEMPAT[mempat_index] != *i) {
+				global_fault_addr = i;
 				return false;
 			}
-			++y;
+			++mempat_index;
 		}
-		screen_data[x] = save;
-		++x;
+		*i = save;
+		++i;
 	}
 	return true;
 }
 
 char test_color() {
-	char *color_data = (char *)0xD800;
-	char *mem_pattern = (char *)MEMPAT_COLOR;
-	char save, y;
-	int x = 0;
-	while (x < 25*40) {
-		save = color_data[x];
-		y = 0;
-		while (y < MEMPAT_COLOR_LEN) {
-			color_data[x] = mem_pattern[y];
-			microdelay();
-			if (mem_pattern[y] != (color_data[x] & 0x0F)) {
-				global_fault_addr = (char *)(0xD800 + x);
+	unsigned char save, mempat_index;
+	unsigned char *i = COLORMEM;
+	while (i < COLORMEM+25*40) {
+		save = *i;
+		mempat_index = 0;
+		while (mempat_index < MEMPAT_COLOR_LEN) {
+			*i = MEMPAT_COLOR[mempat_index];
+			if (MEMPAT_COLOR[mempat_index] != (*i & 0x0F)) {
+				global_fault_addr = i;
 				return false;
 			}
-			++y;
+			++mempat_index;
 		}
-		color_data[x] = save;
-		++x;
+		*i = save;
+		++i;
 	}
 	return true;
 }
 
-void puts_addr(const char str[], const char x, const char y) {
-	char *i = (char *)SCREENMEM + (40*y)+x;
-	char cnt = 0;
-	while (str[cnt] != NULL) {
- 		i[cnt] = get_screencode(str[cnt]);
-		++cnt;
-	}
-}
-
 void mem_fail() {
-	*((char *)0xD020) = COLOR_RED;
+	*((unsigned char *)0xD020) = COLOR_RED;	// set border to red
+	while (1);
 }

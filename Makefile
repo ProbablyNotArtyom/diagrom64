@@ -17,22 +17,24 @@ BANKNAMES	:= $(BINDIR)/diagrom.hi $(BINDIR)/diagrom.lo
 
 ## Compiler flags #################################################################################
 
-INCDIRS := $(BASEDIR)/include			# Create a list of directories to search for includes in
+INCDIRS := $(BASEDIR)/include		# Create a list of directories to search for includes in
 INCDIRS += /usr/share/cc65/asminc
 INCDIRS += /usr/share/cc65/include
 
-CFLAGS := -t c64 --cpu 6502 -g			# Generic platform flags
-CFLAGS += $(addprefix -I, $(INCDIRS))	# Format the include directories
+ASFLAGS := -t c64 --cpu 6502 -g
+ASFLAGS += $(addprefix -I, $(INCDIRS))	# Format the include directories
 
-LDFLAGS := -C $(BASEDIR)/link.ld		# Set the linker config
-LDFLAGS += -m $(BINDIR)/map				# Generate a mapfile
+CFLAGS := $(ASFLAGS) -Osr --static-locals
+
+LDFLAGS := -C $(BASEDIR)/link.ld	# Set the linker config
+LDFLAGS += -m $(BINDIR)/map		# Generate a mapfile
 LDFLAGS += --dbgfile $(BINDIR)/debug	# Generate a debug listing
-LDFLAGS += -Ln $(BINDIR)/vicesyms		# Generate VICE symbols
+LDFLAGS += -Ln $(BINDIR)/vicesyms	# Generate VICE symbols
 
 ## Find sources ###################################################################################
 
-SOURCES_ASM := $(shell find $(SRCDIR) -name '*.s')			# Find all assembly sources
-SOURCES_C := $(shell find $(SRCDIR) -name '*.c')			# Find all C sources
+SOURCES_ASM := $(shell find $(SRCDIR) -name '*.s')		# Find all assembly sources
+SOURCES_C := $(shell find $(SRCDIR) -name '*.c')		# Find all C sources
 OBJECTS_ASM := $(SOURCES_ASM:$(SRCDIR)/%.s=$(OBJDIR)/%.o)	# Create list of assembly objects
 OBJECTS_C := $(SOURCES_C:$(SRCDIR)/%.c=$(OBJDIR)/%.o)		# Create list of C objects
 
@@ -64,7 +66,7 @@ sim: $(ROMNAME)
 
 #### Split ROM for use on real hardware ####
 $(BANKNAMES) &: $(ROMNAME)
-ifeq (,$(shell command -v split 2>/dev/null))		# Abort build if split isn't installed
+ifeq (,$(shell command -v split 2>/dev/null))				# Abort build if split isn't installed
 	$(error [!] split utility not found. try installing GNU coreutils)
 else
 	$(info [..] Splitting ROM banks)
@@ -75,7 +77,7 @@ endif
 
 #### Create .crt image ####
 $(CRTNAME) : $(ROMNAME)
-ifeq (,$(shell command -v cartconv 2>/dev/null))	# Abort build if cartconv isn't installed
+ifeq (,$(shell command -v cartconv 2>/dev/null))			# Abort build if cartconv isn't installed
 	$(error [!] cartconv utility not found. is the VICE emulator suite installed?)
 else
 	$(info [..] Creating .crt image)				# Notify cart creation
@@ -84,19 +86,19 @@ endif
 
 #### Build C sources ####
 $(OBJECTS_C) : $$(patsubst $$(OBJDIR)%.o, $$(SRCDIR)%.c, $$@)
-	mkdir -p $(dir $@)												# Make sure the generated object directory exists
-	$(info [CC] -c $(call rel,$^) -o $(call rel,$(@:%.o=%.s)))		# Summarize CC invocation
-	$(CC) $(CFLAGS) -O -Os $^ -o $(@:%.o=%.s)
-	$(info [AS] $(call rel,$(@:%.o=%.s)) -o $(call rel,$@))			# Summarize AS invocation
-	$(AS) -U $(CFLAGS) $(@:%.o=%.s) -o $@
+	mkdir -p $(dir $@)						# Make sure the generated object directory exists
+	$(info [CC] -c $(call rel,$^) -o $(call rel,$(@:%.o=%.s)))	# Summarize CC invocation
+	$(CC) $(CFLAGS) $^ -o $(@:%.o=%.s)
+	$(info [AS] $(call rel,$(@:%.o=%.s)) -o $(call rel,$@))		# Summarize AS invocation
+	$(AS) -U $(ASFLAGS) $(@:%.o=%.s) -o $@
 
 #### Build assembly sources ####
 $(OBJECTS_ASM) : $$(patsubst $$(OBJDIR)%.o, $$(SRCDIR)%.s, $$@)
-	mkdir -p $(dir $@)												# Make sure the generated object directory exists
-	$(info [AS] $(call rel,$^) -o $(call rel,$@))					# Summarize AS invocation
-	$(AS) -U $(CFLAGS) $^ -o $@
+	mkdir -p $(dir $@)						# Make sure the generated object directory exists
+	$(info [AS] $(call rel,$^) -o $(call rel,$@))			# Summarize AS invocation
+	$(AS) -U $(ASFLAGS) $^ -o $@
 
 #### Generate final linked binary ####
 $(ROMNAME) : $(OBJECTS_C) $(OBJECTS_ASM)
-	$(info [LD] $(call rel,$^,$(OBJDIR)) -o $(call rel,$@))			# Summarize LD invocation
+	$(info [LD] $(call rel,$^,$(OBJDIR)) -o $(call rel,$@))		# Summarize LD invocation
 	$(LD) $(LDFLAGS) $^ $(LIBDIR)/sys.lib -o $@
